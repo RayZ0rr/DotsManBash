@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+privateRepo=""
+publicRepo=""
+
+[ -z "$privateRepo" ] && printf "\nprivateRepo variable missing.\nEdit dotsSync script and add 'privateRepo' variable\n\n" && exit 1
+[ -z "$publicRepo" ] && printf "\npublicRepo variable missing.\nEdit dotsSync script and add 'publicRepo' variable\n\n" && exit 1
+
+case "${@}" in
+  "dry")
+    rsync -n -av --delete \
+      --exclude='.git' \
+      --exclude='.gitignore' \
+      --exclude='*config/git' \
+      --exclude='.gitlab' \
+      --exclude='.github' \
+      --exclude='.ssh' \
+      --exclude='fonts/*.zip' \
+      --exclude='*okular*' \
+      "${privateRepo}"/.[^.]* "${publicRepo}"/
+    rsync -n -av --delete \
+      --exclude='/README.md' \
+      --exclude='/LICENSE' \
+      --exclude='/COPYING' \
+      --exclude='/Notes' \
+      --exclude='*okular*' \
+      "${privateRepo}"/* "${publicRepo}"/
+      exit 0 ;;
+  "sync")
+    rsync -av --delete \
+      --exclude='.git' \
+      --exclude='.gitignore' \
+      --exclude='*config/git' \
+      --exclude='.gitlab' \
+      --exclude='.github' \
+      --exclude='.ssh' \
+      --exclude='*okular*' \
+      "${privateRepo}"/.[^.]* "${publicRepo}"/
+    rsync -av --delete \
+      --exclude='/README.md' \
+      --exclude='/LICENSE' \
+      --exclude='/COPYING' \
+      --exclude='/Notes' \
+      --exclude='*okular*' \
+      "${privateRepo}"/* "${publicRepo}"/
+      exit 0 ;;
+  *)
+    echo "Run 'dotsSync sync' to sync between source(privateRepo) and destination(publicRepo)"
+    echo "Run 'dotsSync dry' for dry-run of sync (no changes) between source(privateRepo) and destination(publicRepo)"
+    exit 1 ;;
+esac

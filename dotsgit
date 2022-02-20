@@ -1,0 +1,472 @@
+#!/usr/bin/env bash
+
+myDotsPrivate=""
+myDotsPublic=""
+syncRepoScript=""
+# syncRepoScript="${HOME}/.local/bin"
+privateRepoURL=""
+publicRepoURL=""
+
+[ -z "$myDotsPrivate" ] && printf "\nmyDotsPrivate variable missing.\nEdit dotsgit script and add 'myDotsPrivate' variable\n\n" && exit 1
+[ -z "$myDotsPublic" ] && printf "\nmyDotsPublic variable missing.\nEdit dotsgit script and add 'myDotsPublic' variable\n\n" && exit 1
+[ -z "$syncRepoScript" ] && printf "\nsyncRepoScript variable missing.\nEdit dotsgit script and add 'syncRepoScript' variable\n\n" && exit 1
+
+myGitStatus() {
+  current_path="$PWD"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git status || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitStatusPublic() {
+  current_path="$PWD"
+  cd "${myDotsPublic}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git status || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitLog() {
+  current_path="$PWD"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git log --graph --oneline --decorate --all || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitLogPublic() {
+  current_path="$PWD"
+  cd "${myDotsPublic}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git log --graph --oneline --decorate --all || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitClone() {
+  [ -z "$privateRepoURL" ] && printf "\nprivateRepoURL variable missing.\nEdit dotsgit script and add 'privateRepoURL' variable to use 'dotsgit clone'\n\n" && exit 1
+  [ -z "$publicRepoURL" ] && printf "\npublicRepoURL variable missing.\nEdit dotsgit script and add 'publicRepoURL' variable to use 'dotsgit clone'\n\n" && exit 1
+  current_path="$PWD"
+  ! [[ -d "${myDotsPrivate}" ]] && mkdir -p "${myDotsPrivate}"
+  ! [[ -d "${myDotsPublic}" ]] && mkdir -p "${myDotsPublic}"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git clone ${privateRepoURL} && echo "Private repo cloned to ${myDotsPrivate}" || return 1
+    if [[ -z "$1" ]]
+    then
+      echo -e "\nPlease provide message like 'mygit [mode] \"message\"' to provide commit message\n"
+    elif [[ "$@" == "auto" ]]; then
+      gitMessage="$(printf "Minor fixes: %s" "$(date '+%d-%m-%y')")"
+      git commit -m "${gitMessage}"
+    else
+      if  [[ $# -gt 1 ]] ; then
+        git commit -m "$1" -m "${@: 2}"
+        return 0
+      else
+        git commit -m "$1"
+        return 0
+      fi
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitClonePublic() {
+  current_path="$PWD"
+  cd "${myDotsPublic}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git add . && echo "All added" || return 1
+    if [[ -z "$1" ]]
+    then
+      echo -e "\nPlease provide message like 'mygit [mode] \"message\"' to provide commit message\n"
+    elif [[ "$@" == "auto" ]]; then
+      gitMessage="$(printf "Minor fixes: %s" "$(date '+%d-%m-%y')")"
+      git commit -m "${gitMessage}"
+    else
+      if  [[ $# -gt 1 ]] ; then
+        git commit -m "$1" -m "${@: 2}"
+        return 0
+      else
+        git commit -m "$1"
+        return 0
+      fi
+    fi
+  else
+    echo "No git repo at ${myDotsPublic}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitCommit() {
+  current_path="$PWD"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git add . && echo "All added" || return 1
+    if [[ -z "$1" ]]
+    then
+      echo -e "\nPlease provide message like 'mygit [mode] \"message\"' to provide commit message\n"
+    elif [[ "$@" == "auto" ]]; then
+      gitMessage="$(printf "Minor fixes: %s" "$(date '+%d-%m-%y')")"
+      git commit -m "${gitMessage}"
+    else
+      if  [[ $# -gt 1 ]] ; then
+        git commit -m "$1" -m "${@: 2}"
+        return 0
+      else
+        git commit -m "$1"
+        return 0
+      fi
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitCommitPublic() {
+  current_path="$PWD"
+  cd "${myDotsPublic}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git add . && echo "All added" || return 1
+    if [[ -z "$1" ]]
+    then
+      echo -e "\nPlease provide message like 'mygit [mode] \"message\"' to provide commit message\n"
+    elif [[ "$@" == "auto" ]]; then
+      gitMessage="$(printf "Minor fixes: %s" "$(date '+%d-%m-%y')")"
+      git commit -m "${gitMessage}"
+    else
+      if  [[ $# -gt 1 ]] ; then
+        git commit -m "$1" -m "${@: 2}"
+        return 0
+      else
+        git commit -m "$1"
+        return 0
+      fi
+    fi
+  else
+    echo "No git repo at ${myDotsPublic}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitCommitPush() {
+  current_path="$PWD"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git add . && echo "All added" || return 1
+    if [[ -z "$1" ]]
+    then
+      echo -e "\nPlease provide message like 'mygit [mode] \"message\"' to provide commit message\n"
+    elif [[ "$@" == "auto" ]]; then
+      gitMessage="$(printf "Minor fixes: %s" "$(date '+%d-%m-%y')")"
+      git commit -m "${gitMessage}"
+    else
+      if  [[ $# -gt 1 ]] ; then
+        git commit -m "$1" -m "${@: 2}"
+        git push
+        return 0
+      else
+        git commit -m "$1"
+        git push
+        return 0
+      fi
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitCommitPushPublic() {
+  current_path="$PWD"
+  cd "${myDotsPublic}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git add . && echo "All added" || return 1
+    if [[ -z "$1" ]]
+    then
+      echo -e "\nPlease provide message like 'mygit [mode] \"message\"' to provide commit message\n"
+    elif [[ "$@" == "auto" ]]; then
+      gitMessage="$(printf "Minor fixes: %s" "$(date '+%d-%m-%y')")"
+      git commit -m "${gitMessage}"
+    else
+      if  [[ $# -gt 1 ]] ; then
+        git commit -m "$1" -m "${@: 2}"
+        git push
+        return 0
+      else
+        git commit -m "$1"
+        git push
+        return 0
+      fi
+    fi
+  else
+    echo "No git repo at ${myDotsPublic}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitPush() {
+  current_path="$PWD"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git push || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitPushPublic() {
+  current_path="$PWD"
+  cd "${myDotsPublic}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git push || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitPull() {
+  current_path="$PWD"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git pull || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitPullPublic() {
+  current_path="$PWD"
+  cd "${myDotsPublic}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    git pull || return 1
+    if ! [[ -z "$@" ]]
+    then
+      echo -e "\nDoesn't accept any arguments\n"
+      exit 1
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+myGitCommitDry() {
+  current_path="$PWD"
+  cd "${myDotsPrivate}"
+  if [[ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]]
+  then
+    echo "All added" || return 1
+    param=$1
+    if [[ -z ${param} ]]
+    then
+      echo -e "\nPlease provide message like 'mygit dry \"message\"' to provide commit message\n"
+      echo "param is ${param}"
+    elif [[ "$@" == "auto" ]]; then
+      printf "Minor fixes: %s" "$(date '+%d-%m-%y')"
+    else
+      if  [[ $# -gt 1 ]] ; then
+        printf "Commmiting changes to commit $1 and ${@: 2}"
+        cd "$current_path"
+        return 0
+      else
+        printf "Commmiting changes to commit $1"
+        cd "$current_path"
+        return 0
+      fi
+    fi
+  else
+    echo "No git repo at ${myDotsPrivate}"
+    cd "$current_path"
+    return 1
+  fi
+  cd "$current_path"
+}
+
+case "${1}" in
+  "all")
+    myGitCommit ${@: 2}
+    myGitCommitPublic ${@: 2}
+    exit 0 ;;
+  "allP")
+    myGitCommitPush ${@: 2}
+    myGitCommitPushPublic ${@: 2}
+    exit 0 ;;
+  # "status")
+  #   myGitStatus
+  #   exit 0 ;;
+  # "statusP")
+  #   myGitStatusPublic
+  #   exit 0 ;;
+  "status")
+    echo "--------------------------------------------------"
+    printf "Private Repo Status\n"
+    echo "--------------------------------------------------"
+    myGitStatus
+    printf "\n"
+    echo "--------------------------------------------------"
+    printf "Public Repo Status\n"
+    echo "--------------------------------------------------"
+    myGitStatusPublic
+    exit 0 ;;
+  "drysync")
+    ${syncRepoScript}/dotsSync dry
+    exit 0 ;;
+  "sync")
+    ${syncRepoScript}/dotsSync sync
+    exit 0 ;;
+  "commit")
+    myGitCommit "${@: 2}"
+    exit 0 ;;
+  "commitP")
+    myGitCommitPublic "${@: 2}"
+    exit 0 ;;
+  "commitA")
+    myGitCommit "${@: 2}"
+    myGitCommitPublic "${@: 2}"
+    exit 0 ;;
+  "push")
+    myGitPush "${@: 2}"
+    exit 0 ;;
+  "pushP")
+    myGitPushPublic "${@: 2}"
+    exit 0 ;;
+  "pushA")
+    echo "--------------------------------------------------"
+    printf "Pushing to Private Repo\n"
+    echo "--------------------------------------------------"
+    printf "\n"
+    myGitPush
+    echo "--------------------------------------------------"
+    printf "Pushing to Public Repo\n"
+    echo "--------------------------------------------------"
+    myGitPushPublic
+    exit 0 ;;
+  "pul")
+    myGitPull "${@: 2}"
+    exit 0 ;;
+  "pullP")
+    myGitPullPublic "${@: 2}"
+    exit 0 ;;
+  "pullA")
+    echo "--------------------------------------------------"
+    printf "Pulling from Private Repo\n"
+    echo "--------------------------------------------------"
+    myGitPull
+    printf "\n"
+    echo "--------------------------------------------------"
+    printf "Pulling from Public Repo\n"
+    echo "--------------------------------------------------"
+    myGitPullPublic
+    exit 0 ;;
+  "pushF")
+    myGitCommitPush "${@: 2}"
+    exit 0 ;;
+  "pushFP")
+    myGitCommitPushPublic "${@: 2}"
+    exit 0 ;;
+  "log")
+    myGitLog
+    exit 0 ;;
+  "logP")
+    myGitLogPublic
+    exit 0 ;;
+  "logA")
+    myGitLog
+    myGitLogPublic
+    exit 0 ;;
+  "dry")
+    myGitCommitDry "${@: 2}"
+    exit 0 ;;
+  *)
+    # echo "Run 'dotsgit [all|status|statusP|statusAll|commit|commitP|push|pushP|dry]' to [commit all|commit private|commit public] (same for for status/push by adding 'P' like 'dotsP') files between dotfiles repo at github or gitlab and local system"
+    printf "\nRun 'dotsgit [all|commit|commitP|push|pushP|dry]' to [add and commit all|add and commit private|add and commit public] (same for for push by adding 'P' like 'pushP') files between dotfiles repo at github or gitlab and local system\n"
+    printf "\nRun 'dotsgit status' for status of private and public repos\n\n"
+    printf "\nRun 'dotsgit log|logP' for 'git log --graph --online --decorate --all of private|public repo\n(Also has logA version for both)\n"
+    printf "\nRun 'dotsgit pull|pullP' for pulling from private|public repo\n(Also has pullA version for both)\n"
+    printf "\nRun 'dotsgit pushA' to just push (no add or commit) all repos (combination of dotsgit push and dotsgit pushP)\n"
+    printf "\nRun 'dotsgit commitA' to combine 'commit' and 'commitP' modes\n"
+    printf "\nRun 'dotsgit [pushF|pushFP]' to add, commit and push to [private|public] repo (Not recommended. Use dotsgit [commit|commitP] and dotsgit [push|pushP] seperately)\n"
+    printf "\nRun 'dotsgit dry' for dry-run of 'all' (no changes will be made)\n"
+    exit 1 ;;
+esac
