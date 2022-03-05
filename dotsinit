@@ -116,29 +116,77 @@ setup_all_dry(){
   cd "$current_path"
 }
 
-setup_config_files(){
+link_config_files(){
   current_path="$PWD"
   cd "/home/${myName}"
+  # Symlink and setup .config files from dotfiles repo ($myDots/.config)
+  ! [[ -d "/home/${myName}/.config" ]] && mkdir -p "/home/${myName}/.config"
   if ! [[ -z "$@" ]]
   then
     for i in "$@"
     do
-      printf "\nStowing ${i}\n"
+      printf "\nStowing ${i} from ${myDots}/.config to ~/.config/${i}\n"
       ! [[ -d ".config/${i}" ]] && mkdir -p ".config/${i}"
       stow -v --no-folding -t ".config/${i}" -d "${myDots}/.config" -S "${i}"
     done
     cd "$current_path"
     exit 0
   fi
-  # Symlink and setup .config files from dotfiles repo ($myDots/.config)
-  ! [[ -d "/home/${myName}/.config" ]] && mkdir -p "/home/${myName}/.config"
   # for i in "bash" "zsh" "git" "herbstluftwm" "i3" "polybar" "sxhkd" "rofi" "alacritty" "vifm" "picom" "conky" "dunst" "tmux" "jgmenu" "zathura" "bottom" "bat" "starshipPrompt" "neofetch"
   for i in "${configFolders[@]}"
   do
     ! [[ -d ".config/${i}" ]] && mkdir -p ".config/${i}"
+    printf "\nStowing ${i} from ${myDots}/.config to ~/.config/${i}\n"
     stow -v --no-folding -t ".config/$i" -d "${myDots}/.config" -S "$i"
   done
   cd "$current_path"
+}
+
+copy_config_files(){
+  current_path="$PWD"
+  cd "/home/${myName}"
+  # Symlink and setup .config files from dotfiles repo ($myDots/.config)
+  ! [[ -d "/home/${myName}/.config" ]] && mkdir -p "/home/${myName}/.config"
+  if ! [[ -z "$@" ]]
+  then
+    for i in "$@"
+    do
+      printf "\nCopying ${i} from ${myDots}/.config to ~/.config/${i}\n"
+      cp -r "${myDots}/.config/${i}" .config/
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  # for i in "bash" "zsh" "git" "herbstluftwm" "i3" "polybar" "sxhkd" "rofi" "alacritty" "vifm" "picom" "conky" "dunst" "tmux" "jgmenu" "zathura" "bottom" "bat" "starshipPrompt" "neofetch"
+  for i in "${configFolders[@]}"
+  do
+    printf "\nCopying ${i} from ${myDots}/.config to ~/.config/${i}\n"
+    cp -r "${myDots}/.config/${i}" .config/
+  done
+  cd "$current_path"
+}
+
+setup_config_files(){
+case "${1}" in
+  "dry")
+    dry_link_config_dry "${@: 2}"
+    exit 0 ;;
+  "all")
+    link_config_files "${@: 2}"
+    exit 0 ;;
+  "cp")
+    copy_config_files "${@: 2}"
+    exit 0 ;;
+  "ln")
+    link_config_files "${@: 2}"
+    exit 0 ;;
+  *)
+    printf "\nRequires the software stow (GNU/stow)\n"
+    printf "\nRun 'dotsinit config [all|cp|ln|dry]' to sync with [symlink|copy|symlink|dry] files between dotfiles config repo and system\n"
+    printf "\nRun 'dotsinit config' also takes optional arguments, after modes above, of specific config folders.\n"
+    printf "\nExample 'dotsinit config ln i3 polybar' to symlink i3 and polybar config folders. \n"
+    exit 1 ;;
+esac
 }
 
 setup_local_files(){
