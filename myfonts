@@ -434,7 +434,7 @@ case "${1}" in
     fc-cache -fv
     exit 0 ;;
   *)
-    printf "\nRun 'myfonts [ls|get|up|upB|ls]' to [list|download|update already exisiting|update and backup already exisiting|load] nerd fonts from ${fontDir}\n"
+    printf "\nRun 'myfonts [ls|get|up|upB|ld]' to [list|download|update already exisiting|update and backup already exisiting|load] nerd fonts from ${fontDir}\n"
     exit 1 ;;
 esac
 
