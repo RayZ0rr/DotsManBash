@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 
-fontDir=""
-# fontDir="${HOME}/.local/share/fonts"
-# fontTestDir="${HOME}/tmp/fontscheck"
-
-[ -z "$fontDir" ] && printf "\nfontDir variable missing.\nEdit myfonts script and add 'fontDir' variable\n\n" && exit 1
-
+fontsPath="${HOME}/.local/share/fonts"
 fontsRepo="https://github.com/ryanoasis/nerd-fonts"
 fontsRepoRaw="${fontsRepo}/raw/master/patched-fonts"
 # https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraCode/Regular/complete/Fira%20Code%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
 fontNames=( "JetBrainsMono" "Hack" "FiraCode" "UbuntuMono" "Iosevka" "SourceCodePro" )
 fontTypes=( "Regular" "Bold" "Italic" "BoldItalic" )
+fontDir="${HOME}/.local/share/fonts"
+# fontDir="${HOME}/tmp/fontscheck"
 
 fonts_JetBrainsMono() {
   name1="${1:-JetBrainsMono}"

@@ -7,6 +7,21 @@ myName=""
 [ -z "$myDots" ] && printf "\nmyDots variable missing.\nEdit dotsinit script and add 'myDots' variable\n\n" && exit 1
 [ -z "$myName" ] && printf "\nmyName variable missing.\nEdit dotsinit script and add 'myName' variable\n\n" && exit 1
 
+myNvim=".config/nvim"
+myNvimRepo=""
+
+setup_nvim_files(){
+  [ -z "$myNvimRepo" ] && printf "\nmyNvimRepo variable missing.\nEdit dotsinit script and add 'myNvimRepo' variable\n\n" && exit 1
+  current_path="$PWD"
+  cd "/home/${myName}"
+  # Symlink and setup .config files from myNeovim repo ($myNvim)
+  ! [[ -d "/home/${myName}/${myNvim}" ]] && mkdir -p "/home/${myName}/${myNvim}"
+  find ${myNvim} -xtype l -delete
+  stow -v --no-folding -t "${myNvim}" -d "${myNvimRepo}" -S "nvim"
+  find ${myNvim} -xtype l -delete
+  cd "$current_path"
+}
+
 configFolders=( "bash" "zsh" "git" "herbstluftwm" "i3" "polybar" "sxhkd" "rofi" "alacritty" "vifm" "picom" "conky" "dunst" "tmux" "jgmenu" "zathura" "bottom" "bat" "starshipPrompt" "neofetch" )
 
 setup_test_files(){
@@ -53,6 +68,7 @@ setup_all_files(){
     ! [[ -d ".config/${i}" ]] && mkdir -p ".config/${i}"
     stow -v --no-folding -t ".config/$i" -d "${myDots}/.config" -S "$i"
   done
+  ln -sf "${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
   # Symlink and setup .local files, mainly ".local/bin", from dotfiles repo ($myDots/.local)
   printf "\nSymlink and setup .local files, mainly \".local/bin\", from dotfiles repo ($myDots/.local)\n"
   ! [[ -d "/home/${myName}/.local/bin" ]] && mkdir -p "/home/${myName}/.local/bin"
@@ -66,13 +82,16 @@ setup_all_files(){
   ln -sf "${myDots}/HOME/.tmux.conf" .tmux.conf
   ln -sf "${myDots}/HOME/.Xresources" .Xresources
   # Setup fonts to ~/.local/share/fonts from ${myDots}/.local/share/fonts and run `fc-cache -fv`
-  printf "\nSetup fonts to ~/.local/share/fonts from ${myDots}/.local/share/fonts and run 'fc-cache -fv'\n"
+  printf "\nSetup fonts to ~/.local/share/fonts with 'myfonts get' and run 'fc-cache -fv'\n"
   ! [[ -d ".local/share/fonts" ]] && mkdir -p ".local/share/fonts"
-  tar --zstd -xf "${myDots}/.local/share/fonts/fonts.tar.zst" -C "${HOME}/.local/share/fonts"
-  fc-cache -fv
   # Copy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png
   printf "\nCopy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png\n"
-  cp -r "${myDots}/.local/src/*.png" .local/src/
+  ! [[ -d "/home/${myName}/.local/src" ]] && mkdir -p "/home/${myName}/.local/src"
+  cp -r "${myDots}/.local/src"/*.png .local/src/
+  # Copy rofi themes to ~/.local/share/rofi/themes from ${myDots}/.local/share/rofi/themes
+  printf "\nCopy rofi themes to ~/.local/share/rofi/themes from ${myDots}/.local/share/rofi/themes"
+  ! [[ -d "/home/${myName}/.local/share/rofi" ]] && mkdir -p "/home/${myName}/.local/share/rofi"
+  cp -r "${myDots}/.local/share/rofi/themes" .local/share/rofi/
   cd "$current_path"
 }
 
@@ -106,13 +125,11 @@ setup_all_dry(){
   printf "LINK: .ignore => gFolder/RaZ0rr/dotfiles/HOME/.ignore"
   printf "LINK: .tmux.conf => gFolder/RaZ0rr/dotfiles/HOME/.tmux.conf"
   printf "LINK: .Xresources => gFolder/RaZ0rr/dotfiles/HOME/.Xresources"
-  # Setup fonts to ~/.local/share/fonts from ${myDots}/.local/share/fonts and run `fc-cache -fv`
-  printf "\nSetup fonts to ~/.local/share/fonts from ${myDots}/.local/share/fonts and run 'fc-cache -fv'\n"
-  echo "copying \"${myDots}/.local/share/fonts\" to .local/share/fonts"
-  echo "Running 'fc-cache -fv'"
   # Copy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png
   printf "\nCopy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png\n"
-  echo "copying \"${myDots}/.local/src/*.png\" .local/src/"
+  echo "copying \"${myDots}/.local/src\"/*.png .local/src/"
+  printf "\nCopy rofi themes to ~/.local/share/rofi/themes from ${myDots}/.local/share/rofi/themes"
+  echo "copying \"${myDots}/.local/share/rofi/themes\" .local/share/rofi/themes"
   cd "$current_path"
 }
 
@@ -139,6 +156,7 @@ link_config_files(){
     printf "\nStowing ${i} from ${myDots}/.config to ~/.config/${i}\n"
     stow -v --no-folding -t ".config/$i" -d "${myDots}/.config" -S "$i"
   done
+  ln -sf "${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
   cd "$current_path"
 }
 
@@ -163,6 +181,7 @@ copy_config_files(){
     printf "\nCopying ${i} from ${myDots}/.config to ~/.config/${i}\n"
     cp -r "${myDots}/.config/${i}" .config/
   done
+  cp "${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
   cd "$current_path"
 }
 
@@ -189,12 +208,68 @@ case "${1}" in
 esac
 }
 
+backup_config_files(){
+  current_path="$PWD"
+  cd "/home/${myName}"
+  ! [[ -d "/home/${myName}/.config" ]] && return 0
+  # Backup specifc .config folders in ($myDots/.config) to ${myName}/BackUp
+  ! [[ -d "/home/${myName}/BackUp/.config" ]] && mkdir -p "/home/${myName}/BackUp/.config"
+  printf "\nBackup specifc .config folders in ($myDots/.config) to ${myName}/BackUp\n"
+  for i in "${configFolders[@]}"
+  do
+    if [[ -d ".config/${i}" && -z "$(ls -A .config/${i})" ]]; then
+      rm -r ".config/${i}"
+    else
+      [[ -d ".config/${i}" ]] && mv ".config/$i" "BackUp/.config/"
+    fi
+  done
+  cd "$current_path"
+}
+
+backup_local_and_home_files() {
+  current_path="$PWD"
+  cd "/home/${myName}"
+  ! [[ -d "/home/${myName}/.local/bin" ]] && return 0
+  # BackUp local files, mainly from \".local/bin\", to ($myName/BackUp/.local/bin)ymlink and setup .local files, mainly ".local/bin", from dotfiles repo ($myDots/.local)
+  ! [[ -d "/home/${myName}/BackUp/.local/bin" ]] && mkdir -p "/home/${myName}/BackUp/.local/bin"
+  printf "\nBackUp local files, mainly from \".local/bin\", to ($myName/BackUp/.local/bin)\n"
+  if [[ -d "/home/${myName}/.local/bin" && -z "$(ls -A /home/${myName}/.local/bin)" ]]; then
+    rm -r "/home/${myName}/.local/bin"
+  else
+    mv ".local/bin" "BackUp/.local/"
+  fi
+
+  # BackUp dotfiles files in $HOME directory like .bashrc,.zshenv to ($myName/BackUp/HOME)
+  printf "\nBackUp dotfiles files in $HOME directory like .bashrc,.zshenv to (~/BackUp/HOME)\n"
+  ! [[ -d "/home/${myName}/BackUp/HOME" ]] && mkdir -p "/home/${myName}/BackUp/HOME"
+  printf "BackUp: .bashrc => ~/BackUp/HOME/.bashrc"
+  mv .bashrc ${myName}/BackUp/HOME/
+  printf "BackUp: .zshenv => ~/BackUp/HOME/.zshenv"
+  mv .zshenv ${myName}/BackUp/HOME/
+  printf "BackUp: .profile => ~/BackUp/HOME/.profile"
+  mv .profile ${myName}/BackUp/HOME/
+  printf "BackUp: .ignore => ~/BackUp/HOME/.ignore"
+  mv .ignore ${myName}/BackUp/HOME/
+  printf "BackUp: .tmux.conf => ~/BackUp/HOME/.tmux.conf"
+  mv .tmux.conf ${myName}/BackUp/HOME/
+  printf "BackUp: .Xresources => ~/BackUp/HOME/.Xresources"
+  mv .Xresources ${myName}/BackUp/HOME/
+  printf "\nBackUp rofi themes to ~/BackUp/.local/share/rofi/themes from ~/.local/share/rofi/themes if it exists"
+  ! [[ -d "/home/${myName}/BackUp/.local/share/rofi" ]] && mkdir -p "/home/${myName}/BackUp/.local/share/rofi"
+  mv .local/share/rofi/themes "BackUp/.local/share/rofi/"
+  cd "$current_path"
+}
+
 setup_local_files(){
   current_path="$PWD"
   cd "/home/${myName}"
   # Symlink and setup .local files, mainly ".local/bin", from dotfiles repo ($myDots/.local)
   ! [[ -d "/home/${myName}/.local/bin" ]] && mkdir -p "/home/${myName}/.local/bin"
   stow -v --no-folding -t ".local/bin" -d "${myDots}/.local" -S "bin"
+  ! [[ -d "/home/${myName}/.local/src" ]] && mkdir -p "/home/${myName}/.local/src"
+  cp -r "${myDots}/.local/src"/*.png .local/src/
+  ! [[ -d "/home/${myName}/.local/share/rofi" ]] && mkdir -p "/home/${myName}/.local/share/rofi"
+  cp -r "${myDots}/.local/share/rofi/themes" .local/share/rofi/
   cd "$current_path"
 }
 
@@ -226,6 +301,7 @@ remove_config_files(){
       ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && exit 1
       find .config/${i} -delete
     done
+    rm .config/stalonetrayrc
     cd "$current_path"
     exit 0
   fi
@@ -238,6 +314,7 @@ remove_config_files(){
       ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && exit 1
       find .config/${i} | awk '{print "Removing "$1}'
     done
+    printf "\nRemoving .config/stalonetrayrc\n"
     printf "\n This is just a simulation it will not remove anything"
     cd "$current_path"
     exit 0
@@ -249,6 +326,7 @@ remove_config_files(){
       printf ":----------------------------------------------\n"
       ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && exit 1
       find .config/${i} -type l -delete
+      find .config/${i}
       find .config/${i} -delete
     done
     cd "$current_path"
@@ -274,9 +352,9 @@ setup_home_files(){
 setup_fonts(){
   current_path="$PWD"
   cd "/home/${myName}"
-  # Setup fonts to ~/.local/share/fonts from ${myDots}/.local/share/fonts/fonts.tar.zst after extraction through 'tar --zstd' and run `fc-cache -fv`
-  ! [[ -d ".local/share/fonts" ]] && mkdir -p ".local/share/fonts"
-  tar --zstd -xf "${myDots}/.local/share/fonts/fonts.tar.zst" -C "${HOME}/.local/share/fonts"
+  # Setup fonts to ~/.local/share/fonts with ~/.local/bin/myfonts (which downloads fonts and run `fc-cache -fv`)
+  ! [[ -f ".local/bin/myfonts" ]] && echo "~/.local/bin/myfonts script not found" && exit 1
+  .local/bin/myfonts get || echo "~/.local/bin/myfonts script not executable" && exit 1
   fc-cache -fv
   cd "$current_path"
 }
@@ -289,6 +367,13 @@ then
 fi
 
 case "${1}" in
+  "nv")
+    setup_nvim_files
+    exit 0 ;;
+  "bu")
+    backup_config_files
+    backup_local_and_home_files
+    exit 0 ;;
   "dry")
     setup_all_dry
     exit 0 ;;
@@ -320,6 +405,8 @@ case "${1}" in
     printf "\nRequires the software stow (GNU/stow)\n"
     printf "\nRun 'dotsinit [all|config|local|home|fonts]' to sync [all|.config|.local/bin|\$HOME|.local/share/fonts] files between dotfiles repo and local system\n"
     printf "\nRun 'dotsinit config' also takes optional arguments of specific config folders. \nEg:- dotsinit config i3, dotsinit config zsh git\n"
+    printf "\nRun 'dotsinit bu' to backup existing config and local files\n"
+    printf "\nRun 'dotsinit nv' to setup nvim config (set myNvim* variables in the script)\n"
     printf "\nRun 'dotsinit rm' to remove .config from local system\n"
     printf "It further needs exactly one of arguments [dry|delete|link] to [simulate removal|directly delete|only delete broken symlinks]\n"
     printf "\nRun 'dotsinit dry' for dry-run of 'all' (no changes will be made)\n\n"

@@ -15,8 +15,8 @@ case "${@}" in
       --exclude='.gitlab' \
       --exclude='.github' \
       --exclude='.ssh' \
-      --exclude='fonts/*.zip' \
       --exclude='*okular*' \
+      --exclude='bin/dots*' \
       "${privateRepo}"/.[^.]* "${publicRepo}"/
     rsync -n -av --delete \
       --exclude='/README.md' \
@@ -35,6 +35,7 @@ case "${@}" in
       --exclude='.github' \
       --exclude='.ssh' \
       --exclude='*okular*' \
+      --exclude='bin/dots*' \
       "${privateRepo}"/.[^.]* "${publicRepo}"/
     rsync -av --delete \
       --exclude='/README.md' \
