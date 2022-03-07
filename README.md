@@ -30,7 +30,7 @@ Just copy the script to anywhere in your _`PATH`_ ( `echo $PATH` ). Make sure th
 ### `dotsgit`
 ```sh
 # Show both private and public repository status
-dotsgit statusA 
+dotsgit status 
 
 # Show both private and public repository log
 dotsgit logA 
