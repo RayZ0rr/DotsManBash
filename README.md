@@ -14,7 +14,7 @@ Here is a collection of scripts to manage all these tasks.
 3. `rsync`
 
 # Install
-Just copy the script to anywhere in your _`PATH`_ ( `echo $PATH` ). Make sure the script is executable ( `chmod +x wstow` )
+Just copy the script to anywhere in your _`PATH`_ ( `echo $PATH` ). Make sure the script is executable ( `chmod +x dots*` )
 
 # Usage
 
