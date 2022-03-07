@@ -452,7 +452,13 @@ case "${1}" in
     myGitLogPublic
     exit 0 ;;
   "logA")
+    echo "--------------------------------------------------"
+    printf "Private repo log\n"
+    echo "--------------------------------------------------"
     myGitLog
+    echo "--------------------------------------------------"
+    printf "Public repo log\n"
+    echo "--------------------------------------------------"
     myGitLogPublic
     exit 0 ;;
   "dry")

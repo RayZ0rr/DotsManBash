@@ -69,7 +69,7 @@ setup_all_files(){
     ! [[ -d ".config/${i}" ]] && mkdir -p ".config/${i}"
     stow -v --no-folding -t ".config/$i" -d "${myDots}/.config" -S "$i"
   done
-  ln -sf "${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
+  ln -sf ../"${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
   # Symlink and setup .local files, mainly ".local/bin", from dotfiles repo ($myDots/.local)
   printf "\nSymlink and setup .local files, mainly \".local/bin\", from dotfiles repo ($myDots/.local)\n"
   ! [[ -d "/home/${myName}/.local/bin" ]] && mkdir -p "/home/${myName}/.local/bin"
@@ -169,7 +169,7 @@ link_config_files(){
     printf "\nStowing ${i} from ${myDots}/.config to ~/.config/${i}\n"
     stow -v --no-folding -t ".config/$i" -d "${myDots}/.config" -S "$i"
   done
-  ln -sf "${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
+  ln -sf ../"${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
   cd "$current_path"
 }
 
