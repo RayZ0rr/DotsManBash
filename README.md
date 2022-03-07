@@ -18,10 +18,10 @@ Just copy the script to anywhere in your _`PATH`_ ( `echo $PATH` ). Make sure th
 
 # Usage
 
-All the scripts starting with '`dots`' needs some variables (like repository directory path) to be set to work. Open the script with your favourite editor and add them.
-All the scripts need atleast one argument to do various tasks. Running the script without argument(s) or with invalid argument(s) will show the help menu. 
-`myfonts` script have some fonts specified in the script. If you want more, you can add it yourself.
-Open the scripts and look at the final case statements to view all available valid arguments.
+* All the scripts starting with '`dots`' needs some variables (like repository directory path) to be set to work. Open the script with your favourite editor and add them.
+* All the scripts need atleast one argument to do various tasks. Running the script without argument(s) or with invalid argument(s) will show the help menu. 
+* `myfonts` script have some fonts specified in the script. If you want more, you can add it yourself.
+* Open the scripts and look at the final `case statements` to view all available valid arguments.
 
 ## Examples
 ----------
@@ -35,7 +35,7 @@ dotsgit statusA
 dotsgit logA 
 
 # Commit to both private and public repository
-dotsgit commitA 
+dotsgit commitA "<commit message>"
 ```
 
 ### `dotsinit`
@@ -50,5 +50,3 @@ dotsinit home
 dotsinit rm polybar neofetch
 dotsinit config polybar neofetch
 ```
-
-###End
