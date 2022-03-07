@@ -7,6 +7,9 @@ myName=""
 [ -z "$myDots" ] && printf "\nmyDots variable missing.\nEdit dotsinit script and add 'myDots' variable\n\n" && exit 1
 [ -z "$myName" ] && printf "\nmyName variable missing.\nEdit dotsinit script and add 'myName' variable\n\n" && exit 1
 
+configFolders=( "bash" "zsh" "git" "herbstluftwm" "i3" "polybar" "sxhkd" "rofi" "alacritty" "vifm" "picom" "conky" "dunst" "tmux" "jgmenu" "zathura" "bottom" "bat" "starshipPrompt" "neofetch" )
+homeFiles=( ".bashrc" ".zshrc" ".zshenv" ".tmux.conf" "Xresources" ".ignore" ".profile" )
+
 myNvim=".config/nvim"
 myNvimRepo=""
 
@@ -21,8 +24,6 @@ setup_nvim_files(){
   find ${myNvim} -xtype l -delete
   cd "$current_path"
 }
-
-configFolders=( "bash" "zsh" "git" "herbstluftwm" "i3" "polybar" "sxhkd" "rofi" "alacritty" "vifm" "picom" "conky" "dunst" "tmux" "jgmenu" "zathura" "bottom" "bat" "starshipPrompt" "neofetch" )
 
 setup_test_files(){
   current_path="$PWD"
@@ -75,12 +76,18 @@ setup_all_files(){
   stow -v --no-folding -t ".local/bin" -d "${myDots}/.local" -S "bin"
   # Symlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)
   printf "\nSymlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)\n"
-  ln -sf "${myDots}/HOME/.bashrc" .bashrc
-  ln -sf "${myDots}/HOME/.zshenv" .zshenv
-  ln -sf "${myDots}/HOME/.profile" .profile
-  ln -sf "${myDots}/HOME/.ignore" .ignore
-  ln -sf "${myDots}/HOME/.tmux.conf" .tmux.conf
-  ln -sf "${myDots}/HOME/.Xresources" .Xresources
+  for i in "${homeFiles[@]}"
+  do
+    printf "\n\nLinking ${myDots}/HOME/$i to ~/$i\n"
+    printf ":----------------------------------------------\n"
+    ln -sf "${myDots}/HOME/$i" $i
+  done
+  # ln -sf "${myDots}/HOME/.bashrc" .bashrc
+  # ln -sf "${myDots}/HOME/.zshenv" .zshenv
+  # ln -sf "${myDots}/HOME/.profile" .profile
+  # ln -sf "${myDots}/HOME/.ignore" .ignore
+  # ln -sf "${myDots}/HOME/.tmux.conf" .tmux.conf
+  # ln -sf "${myDots}/HOME/.Xresources" .Xresources
   # Setup fonts to ~/.local/share/fonts from ${myDots}/.local/share/fonts and run `fc-cache -fv`
   printf "\nSetup fonts to ~/.local/share/fonts with 'myfonts get' and run 'fc-cache -fv'\n"
   ! [[ -d ".local/share/fonts" ]] && mkdir -p ".local/share/fonts"
@@ -119,12 +126,18 @@ setup_all_dry(){
   fi
   # Symlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)
   printf "\nSymlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)\n"
-  printf "LINK: .bashrc => gFolder/RaZ0rr/dotfiles/HOME/.bashrc"
-  printf "LINK: .zshenv => gFolder/RaZ0rr/dotfiles/HOME/.zshenv"
-  printf "LINK: .profile => gFolder/RaZ0rr/dotfiles/HOME/.profile"
-  printf "LINK: .ignore => gFolder/RaZ0rr/dotfiles/HOME/.ignore"
-  printf "LINK: .tmux.conf => gFolder/RaZ0rr/dotfiles/HOME/.tmux.conf"
-  printf "LINK: .Xresources => gFolder/RaZ0rr/dotfiles/HOME/.Xresources"
+  for i in "${homeFiles[@]}"
+  do
+    printf "\n\nLinking ${myDots}/HOME/$i to ~/$i\n"
+    printf ":----------------------------------------------\n"
+    printf "LINK: $i => ${myDots}/HOME/$i"
+  done
+  # printf "LINK: .bashrc => ${myDots}/HOME/.bashrc"
+  # printf "LINK: .zshenv => ${myDots}/HOME/.zshenv"
+  # printf "LINK: .profile => ${myDots}/HOME/.profile"
+  # printf "LINK: .ignore => ${myDots}/HOME/.ignore"
+  # printf "LINK: .tmux.conf => ${myDots}/HOME/.tmux.conf"
+  # printf "LINK: .Xresources => ${myDots}/HOME/.Xresources"
   # Copy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png
   printf "\nCopy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png\n"
   echo "copying \"${myDots}/.local/src\"/*.png .local/src/"
@@ -242,18 +255,24 @@ backup_local_and_home_files() {
   # BackUp dotfiles files in $HOME directory like .bashrc,.zshenv to ($myName/BackUp/HOME)
   printf "\nBackUp dotfiles files in $HOME directory like .bashrc,.zshenv to (~/BackUp/HOME)\n"
   ! [[ -d "/home/${myName}/BackUp/HOME" ]] && mkdir -p "/home/${myName}/BackUp/HOME"
-  printf "BackUp: .bashrc => ~/BackUp/HOME/.bashrc"
-  mv .bashrc ${myName}/BackUp/HOME/
-  printf "BackUp: .zshenv => ~/BackUp/HOME/.zshenv"
-  mv .zshenv ${myName}/BackUp/HOME/
-  printf "BackUp: .profile => ~/BackUp/HOME/.profile"
-  mv .profile ${myName}/BackUp/HOME/
-  printf "BackUp: .ignore => ~/BackUp/HOME/.ignore"
-  mv .ignore ${myName}/BackUp/HOME/
-  printf "BackUp: .tmux.conf => ~/BackUp/HOME/.tmux.conf"
-  mv .tmux.conf ${myName}/BackUp/HOME/
-  printf "BackUp: .Xresources => ~/BackUp/HOME/.Xresources"
-  mv .Xresources ${myName}/BackUp/HOME/
+  for i in "${homeFiles[@]}"
+  do
+    printf "\n\nBackup: ~/$i to ~/BackUp/HOME/\n"
+    printf ":----------------------------------------------\n"
+    mv "$i" ${myName}/BackUp/HOME/
+  done
+  # printf "BackUp: .bashrc => ~/BackUp/HOME/.bashrc"
+  # mv .bashrc ${myName}/BackUp/HOME/
+  # printf "BackUp: .zshenv => ~/BackUp/HOME/.zshenv"
+  # mv .zshenv ${myName}/BackUp/HOME/
+  # printf "BackUp: .profile => ~/BackUp/HOME/.profile"
+  # mv .profile ${myName}/BackUp/HOME/
+  # printf "BackUp: .ignore => ~/BackUp/HOME/.ignore"
+  # mv .ignore ${myName}/BackUp/HOME/
+  # printf "BackUp: .tmux.conf => ~/BackUp/HOME/.tmux.conf"
+  # mv .tmux.conf ${myName}/BackUp/HOME/
+  # printf "BackUp: .Xresources => ~/BackUp/HOME/.Xresources"
+  # mv .Xresources ${myName}/BackUp/HOME/
   printf "\nBackUp rofi themes to ~/BackUp/.local/share/rofi/themes from ~/.local/share/rofi/themes if it exists"
   ! [[ -d "/home/${myName}/BackUp/.local/share/rofi" ]] && mkdir -p "/home/${myName}/BackUp/.local/share/rofi"
   mv .local/share/rofi/themes "BackUp/.local/share/rofi/"
@@ -340,12 +359,19 @@ setup_home_files(){
   current_path="$PWD"
   cd "/home/${myName}"
   # Symlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)
-  ln -sf "${myDots}/HOME/.bashrc" .bashrc
-  ln -sf "${myDots}/HOME/.zshenv" .zshenv
-  ln -sf "${myDots}/HOME/.profile" .profile
-  ln -sf "${myDots}/HOME/.ignore" .ignore
-  ln -sf "${myDots}/HOME/.tmux.conf" .tmux.conf
-  ln -sf "${myDots}/HOME/.Xresources" .Xresources
+  printf "\nSymlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)\n"
+  for i in "${homeFiles[@]}"
+  do
+    printf "\n\nLinking ${myDots}/HOME/$i to ~/$i\n"
+    printf ":----------------------------------------------\n"
+    ln -sf "${myDots}/HOME/$i" $i
+  done
+  # ln -sf "${myDots}/HOME/.bashrc" .bashrc
+  # ln -sf "${myDots}/HOME/.zshenv" .zshenv
+  # ln -sf "${myDots}/HOME/.profile" .profile
+  # ln -sf "${myDots}/HOME/.ignore" .ignore
+  # ln -sf "${myDots}/HOME/.tmux.conf" .tmux.conf
+  # ln -sf "${myDots}/HOME/.Xresources" .Xresources
   cd "$current_path"
 }
 
