@@ -22,6 +22,7 @@ Just copy the script to anywhere in your _`PATH`_ ( `echo $PATH` ). Make sure th
 * All the scripts need atleast one argument to do various tasks. Running the script without argument(s) or with invalid argument(s) will show the help menu. 
 * `myfonts` script have some fonts specified in the script. If you want more, you can add it yourself.
 * Open the scripts and look at the final `case statements` to view all available valid arguments.
+* Make use of the [aliases](./aliases) file to create useful aliases.
 
 ## Examples
 ----------
