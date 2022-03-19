@@ -17,11 +17,44 @@ setup_nvim_files(){
   [ -z "$myNvimRepo" ] && printf "\nmyNvimRepo variable missing.\nEdit dotsinit script and add 'myNvimRepo' variable\n\n" && exit 1
   current_path="$PWD"
   cd "/home/${myName}"
-  # Symlink and setup .config files from myNeovim repo ($myNvim)
-  ! [[ -d "/home/${myName}/${myNvim}" ]] && mkdir -p "/home/${myName}/${myNvim}"
-  find ${myNvim} -xtype l -delete
-  stow -v --no-folding -t "${myNvim}" -d "${myNvimRepo}" -S "nvim"
-  find ${myNvim} -xtype l -delete
+  if [[ -z "$1" ]] ; then
+    echo "Needs arguments"
+    echo "Provide ln, cp , cpb , bu , rm as argument"
+    cd "$current_path"
+    exit 1
+  fi
+  case "${@}" in
+    "ln")
+      # Symlink and setup .config files from myNeovim repo ($myNvim)
+      # ! [[ -d "/home/${myName}/${myNvim}" ]] && mkdir -p "/home/${myName}/${myNvim}"
+      ! [[ -d "${myNvim}" ]] && mkdir -p "${myNvim}"
+      find ${myNvim} -xtype l -delete
+      stow -v --no-folding --ignore=extra -t "${myNvim}" -d "${myNvimRepo}" -S "nvim"
+      find ${myNvim} -xtype l -delete
+      exit 0 ;;
+    "cp")
+      # Copy and setup .config files from myNeovim repo ($myNvim)
+      ! [[ -d "/home/${myName}/${myNvim}" ]] && mkdir -p "/home/${myName}/${myNvim}"
+      cp -r "${myNvimRepo}"/* ${myNvim}/
+      cp -r "${myNvimRepo}"/.[^.]* ${myNvim}/
+      find ${myNvim} -xtype l -delete
+      exit 0 ;;
+    "cpb")
+      # Copy and setup .config files from myNeovim repo ($myNvim)
+      [[ -d "/home/${myName}/${myNvim}" ]] && cp -r "/home/${myName}/${myNvim}" "/home/${myName}/.config/nvim_bak" && rm -r ${myNvim}
+      ! [[ -d "/home/${myName}/${myNvim}" ]] && mkdir -p "/home/${myName}/${myNvim}"
+      cp -r "${myNvimRepo}"/* ${myNvim}/
+      cp -r "${myNvimRepo}"/.[^.]* ${myNvim}/
+      find ${myNvim} -xtype l -delete
+      exit 0 ;;
+    "bu")
+      # Backup .config files from ($myNvim)
+      [[ -d "/home/${myName}/${myNvim}" ]] && cp -r "/home/${myName}/${myNvim}" "/home/${myName}/.config/nvim_bak"
+      exit 0 ;;
+    "rm")
+      rm -r ${myNvim}
+      exit 0 ;;
+  esac
   cd "$current_path"
 }
 
@@ -82,15 +115,6 @@ setup_all_files(){
     printf ":----------------------------------------------\n"
     ln -sf "${myDots}/HOME/$i" $i
   done
-  # ln -sf "${myDots}/HOME/.bashrc" .bashrc
-  # ln -sf "${myDots}/HOME/.zshenv" .zshenv
-  # ln -sf "${myDots}/HOME/.profile" .profile
-  # ln -sf "${myDots}/HOME/.ignore" .ignore
-  # ln -sf "${myDots}/HOME/.tmux.conf" .tmux.conf
-  # ln -sf "${myDots}/HOME/.Xresources" .Xresources
-  # Setup fonts to ~/.local/share/fonts from ${myDots}/.local/share/fonts and run `fc-cache -fv`
-  printf "\nSetup fonts to ~/.local/share/fonts with 'myfonts get' and run 'fc-cache -fv'\n"
-  ! [[ -d ".local/share/fonts" ]] && mkdir -p ".local/share/fonts"
   # Copy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png
   printf "\nCopy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png\n"
   ! [[ -d "/home/${myName}/.local/src" ]] && mkdir -p "/home/${myName}/.local/src"
@@ -132,13 +156,6 @@ setup_all_dry(){
     printf ":----------------------------------------------\n"
     printf "LINK: $i => ${myDots}/HOME/$i"
   done
-  # printf "LINK: .bashrc => ${myDots}/HOME/.bashrc"
-  # printf "LINK: .zshenv => ${myDots}/HOME/.zshenv"
-  # printf "LINK: .profile => ${myDots}/HOME/.profile"
-  # printf "LINK: .ignore => ${myDots}/HOME/.ignore"
-  # printf "LINK: .tmux.conf => ${myDots}/HOME/.tmux.conf"
-  # printf "LINK: .Xresources => ${myDots}/HOME/.Xresources"
-  # Copy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png
   printf "\nCopy desktop and lockscreen wallpaper files to ~/.local/src from ${myDots}/.local/src/*png\n"
   echo "copying \"${myDots}/.local/src\"/*.png .local/src/"
   printf "\nCopy rofi themes to ~/.local/share/rofi/themes from ${myDots}/.local/share/rofi/themes"
@@ -155,6 +172,10 @@ link_config_files(){
   then
     for i in "$@"
     do
+      if [[ "$i" == "stalonetray" ]] ; then
+	ln -sf ../"${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
+	continue
+      fi
       printf "\nStowing ${i} from ${myDots}/.config to ~/.config/${i}\n"
       ! [[ -d ".config/${i}" ]] && mkdir -p ".config/${i}"
       stow -v --no-folding -t ".config/${i}" -d "${myDots}/.config" -S "${i}"
@@ -182,6 +203,10 @@ copy_config_files(){
   then
     for i in "$@"
     do
+      if [[ "$i" == "stalonetray" ]] ; then
+	cp "${myDots}/.config/stalonetrayrc" .config/stalonetrayrc
+	continue
+      fi
       printf "\nCopying ${i} from ${myDots}/.config to ~/.config/${i}\n"
       cp -r "${myDots}/.config/${i}" .config/
     done
@@ -199,84 +224,26 @@ copy_config_files(){
 }
 
 setup_config_files(){
-case "${1}" in
-  "dry")
-    dry_link_config_dry "${@: 2}"
-    exit 0 ;;
-  "all")
-    link_config_files "${@: 2}"
-    exit 0 ;;
-  "cp")
-    copy_config_files "${@: 2}"
-    exit 0 ;;
-  "ln")
-    link_config_files "${@: 2}"
-    exit 0 ;;
-  *)
-    printf "\nRequires the software stow (GNU/stow)\n"
-    printf "\nRun 'dotsinit config [all|cp|ln|dry]' to sync with [symlink|copy|symlink|dry] files between dotfiles config repo and system\n"
-    printf "\nRun 'dotsinit config' also takes optional arguments, after modes above, of specific config folders.\n"
-    printf "\nExample 'dotsinit config ln i3 polybar' to symlink i3 and polybar config folders. \n"
-    exit 1 ;;
-esac
-}
-
-backup_config_files(){
-  current_path="$PWD"
-  cd "/home/${myName}"
-  ! [[ -d "/home/${myName}/.config" ]] && return 0
-  # Backup specifc .config folders in ($myDots/.config) to ${myName}/BackUp
-  ! [[ -d "/home/${myName}/BackUp/.config" ]] && mkdir -p "/home/${myName}/BackUp/.config"
-  printf "\nBackup specifc .config folders in ($myDots/.config) to ${myName}/BackUp\n"
-  for i in "${configFolders[@]}"
-  do
-    if [[ -d ".config/${i}" && -z "$(ls -A .config/${i})" ]]; then
-      rm -r ".config/${i}"
-    else
-      [[ -d ".config/${i}" ]] && mv ".config/$i" "BackUp/.config/"
-    fi
-  done
-  cd "$current_path"
-}
-
-backup_local_and_home_files() {
-  current_path="$PWD"
-  cd "/home/${myName}"
-  ! [[ -d "/home/${myName}/.local/bin" ]] && return 0
-  # BackUp local files, mainly from \".local/bin\", to ($myName/BackUp/.local/bin)ymlink and setup .local files, mainly ".local/bin", from dotfiles repo ($myDots/.local)
-  ! [[ -d "/home/${myName}/BackUp/.local/bin" ]] && mkdir -p "/home/${myName}/BackUp/.local/bin"
-  printf "\nBackUp local files, mainly from \".local/bin\", to ($myName/BackUp/.local/bin)\n"
-  if [[ -d "/home/${myName}/.local/bin" && -z "$(ls -A /home/${myName}/.local/bin)" ]]; then
-    rm -r "/home/${myName}/.local/bin"
-  else
-    mv ".local/bin" "BackUp/.local/"
-  fi
-
-  # BackUp dotfiles files in $HOME directory like .bashrc,.zshenv to ($myName/BackUp/HOME)
-  printf "\nBackUp dotfiles files in $HOME directory like .bashrc,.zshenv to (~/BackUp/HOME)\n"
-  ! [[ -d "/home/${myName}/BackUp/HOME" ]] && mkdir -p "/home/${myName}/BackUp/HOME"
-  for i in "${homeFiles[@]}"
-  do
-    printf "\n\nBackup: ~/$i to ~/BackUp/HOME/\n"
-    printf ":----------------------------------------------\n"
-    mv "$i" ${myName}/BackUp/HOME/
-  done
-  # printf "BackUp: .bashrc => ~/BackUp/HOME/.bashrc"
-  # mv .bashrc ${myName}/BackUp/HOME/
-  # printf "BackUp: .zshenv => ~/BackUp/HOME/.zshenv"
-  # mv .zshenv ${myName}/BackUp/HOME/
-  # printf "BackUp: .profile => ~/BackUp/HOME/.profile"
-  # mv .profile ${myName}/BackUp/HOME/
-  # printf "BackUp: .ignore => ~/BackUp/HOME/.ignore"
-  # mv .ignore ${myName}/BackUp/HOME/
-  # printf "BackUp: .tmux.conf => ~/BackUp/HOME/.tmux.conf"
-  # mv .tmux.conf ${myName}/BackUp/HOME/
-  # printf "BackUp: .Xresources => ~/BackUp/HOME/.Xresources"
-  # mv .Xresources ${myName}/BackUp/HOME/
-  printf "\nBackUp rofi themes to ~/BackUp/.local/share/rofi/themes from ~/.local/share/rofi/themes if it exists"
-  ! [[ -d "/home/${myName}/BackUp/.local/share/rofi" ]] && mkdir -p "/home/${myName}/BackUp/.local/share/rofi"
-  mv .local/share/rofi/themes "BackUp/.local/share/rofi/"
-  cd "$current_path"
+  case "${1}" in
+    "dry")
+      dry_link_config_dry "${@: 2}"
+      exit 0 ;;
+    "all")
+      link_config_files "${@: 2}"
+      exit 0 ;;
+    "cp")
+      copy_config_files "${@: 2}"
+      exit 0 ;;
+    "ln")
+      link_config_files "${@: 2}"
+      exit 0 ;;
+    *)
+      printf "\nRequires the software stow (GNU/stow)\n"
+      printf "\nRun 'dotsinit config [all|cp|ln|dry]' to sync with [symlink|copy|symlink|dry] files between dotfiles config repo and system\n"
+      printf "\nRun 'dotsinit config' also takes optional arguments, after modes above, of specific config folders.\n"
+      printf "\nExample 'dotsinit config ln i3 polybar' to symlink i3 and polybar config folders. \n"
+      exit 1 ;;
+  esac
 }
 
 setup_local_files(){
@@ -292,45 +259,179 @@ setup_local_files(){
   cd "$current_path"
 }
 
+setup_home_files(){
+  current_path="$PWD"
+  cd "/home/${myName}"
+  # Symlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)
+  printf "\nSymlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)\n"
+  if [[ "$@" == "ln" ]] ; then
+    for i in "${homeFiles[@]}"
+    do
+      printf "\n\nLinking ${myDots}/HOME/$i to ~/$i\n"
+      printf ":----------------------------------------------\n"
+      ln -sf "${myDots}/HOME/$i" $i
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  if [[ "$@" == "cp" ]] ; then
+    for i in "${homeFiles[@]}"
+    do
+      printf "\n\nCopying ${myDots}/HOME/$i to ~/$i\n"
+      printf ":----------------------------------------------\n"
+      cp "${myDots}/HOME/$i" $i
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  if ! [[ -z "$@" ]] ; then
+    for i in "${@}"
+    do
+      printf "\n\nLinking ${myDots}/HOME/$i to ~/$i\n"
+      printf ":----------------------------------------------\n"
+      ln -sf "${myDots}/HOME/$i" $i
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  printf "\nUsage:\n"
+  printf "\nRun 'dotsinit home [cp|ln]' to [copy|symlink] files ${myDots}/HOME to $HOME.\n"
+  cd "$current_path"
+  exit 1
+}
+
+backup_config_files(){
+  current_path="$PWD"
+  cd "/home/${myName}"
+  ! [[ -d "/home/${myName}/.config" ]] && exit 1
+  # Backup specifc .config folders in ($myDots/.config) to ${myName}/BackUp
+  ! [[ -d "/home/${myName}/BackUp/.config" ]] && mkdir -p "/home/${myName}/BackUp/.config"
+  printf "\nBackup specifc .config folders in ($myDots/.config) to ${myName}/BackUp\n"
+  if ! [[ -z "$@" ]]
+  then
+    for i in "$@"
+    do
+      if [[ "$i" == "stalonetray" ]] ; then
+	[[ -f ".config/stalonetrayrc" ]] && cp .config/stalonetrayrc BackUp/.config/
+	continue
+      fi
+      if [[ -d ".config/${i}" && -z "$(ls -A .config/${i})" ]]; then
+	rm -r ".config/${i}"
+      else
+	[[ -d ".config/${i}" ]] && cp -r ".config/$i" "BackUp/.config/"
+      fi
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  for i in "${configFolders[@]}"
+  do
+    if [[ -d ".config/${i}" && -z "$(ls -A .config/${i})" ]]; then
+      rm -r ".config/${i}"
+    else
+      [[ -d ".config/${i}" ]] && cp -r ".config/$i" "BackUp/.config/"
+    fi
+  done
+  [[ -f ".config/stalonetrayrc" ]] && cp .config/stalonetrayrc BackUp/.config/
+  cd "$current_path"
+}
+
+backup_local_files() {
+  current_path="$PWD"
+  cd "/home/${myName}"
+  ! [[ -d "/home/${myName}/.local/bin" ]] && exit 1
+  # BackUp local files, mainly from \".local/bin\", to ($myName/BackUp/.local/bin)ymlink and setup .local files, mainly ".local/bin", from dotfiles repo ($myDots/.local)
+  ! [[ -d "/home/${myName}/BackUp/.local" ]] && mkdir -p "/home/${myName}/BackUp/.local"
+  printf "\nBackUp local files, mainly from \".local/bin\", to ($myName/BackUp/.local/bin)\n"
+  if [[ -d "/home/${myName}/.local/bin" && -z "$(ls -A /home/${myName}/.local/bin)" ]]; then
+    rm -r "/home/${myName}/.local/bin"
+  else
+    cp -r ".local/bin" "BackUp/.local/"
+  fi
+  cd "$current_path"
+}
+
+backup_home_files() {
+  current_path="$PWD"
+  cd "/home/${myName}"
+  # BackUp dotfiles files in $HOME directory like .bashrc,.zshenv to ($myName/BackUp/HOME)
+  printf "\nBackUp dotfiles files in $HOME directory like .bashrc,.zshenv to (~/BackUp/HOME)\n"
+  ! [[ -d "/home/${myName}/BackUp/HOME" ]] && mkdir -p "/home/${myName}/BackUp/HOME"
+  for i in "${homeFiles[@]}"
+  do
+    printf "\n\nBackup: ~/$i to ~/BackUp/HOME/\n"
+    printf ":----------------------------------------------\n"
+    cp "$i" ${myName}/BackUp/HOME/
+  done
+  printf "\nBackUp rofi themes to ~/BackUp/.local/share/rofi/themes from ~/.local/share/rofi/themes if it exists"
+  ! [[ -d "/home/${myName}/BackUp/.local/share/rofi" ]] && mkdir -p "/home/${myName}/BackUp/.local/share/rofi"
+  cp -r .local/share/rofi/themes "BackUp/.local/share/rofi/"
+  cd "$current_path"
+}
+
+backup_files() {
+
+  case "$1" in
+    "cfg")
+      backup_config_files "${@: 2}"
+      exit 0 ;;
+    "local")
+      backup_local_files "${@: 2}"
+      exit 0 ;;
+    "home")
+      backup_home_files "${@: 2}"
+      exit 0 ;;
+    *)
+      printf "\nUsage:\n"
+      printf "\nRun 'dotsinit bu [cfg|local|home]' to backup files in config|local|home\n"
+      exit 1 ;;
+  esac
+
+}
+
 remove_config_files(){
   current_path="$PWD"
   cd "/home/${myName}"
   if [[ -z "$1" ]] ; then
     echo "Needs arguments"
-    echo "Provide dry, link, all or <name of folder> as argument"
+    echo "Provide dry, link, file or <name of folder> as argument"
+    exit 1
   fi
-  if [[ "$1" == "link" ]]
+  if [[ "$@" == "link" ]]
   then
     for i in "${configFolders[@]}"
     do
       printf "\n\nRemoving broken links in ${i}\n"
       printf ":----------------------------------------------\n"
-      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && exit 1
+      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && continue
+      find .config/${i} -xtype l | awk '{print "Removing "$1}'
       find .config/${i} -xtype l -delete
     done
+    find .config/stalonetrayrc -xtype l -delete
     cd "$current_path"
     exit 0
   fi
-  if [[ "$1" == "all" ]]
+  if [[ "$@" == "file" ]]
   then
     for i in "${configFolders[@]}"
     do
       printf "\n\nRemoving files in ${i}\n"
       printf ":----------------------------------------------\n"
-      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && exit 1
+      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && continue
+      find .config/${i} | awk '{print "Removing "$1}'
       find .config/${i} -delete
     done
     rm .config/stalonetrayrc
     cd "$current_path"
     exit 0
   fi
-  if [[ "$1" == "dry" ]]
+  if [[ "$@" == "dry" ]]
   then
     for i in "${configFolders[@]}"
     do
-      printf "\n\nRemoving files in ${i}\n"
+      printf "\n\nSimulating removal of files in ${i}\n"
       printf ":----------------------------------------------\n"
-      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && exit 1
+      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && continue
       find .config/${i} | awk '{print "Removing "$1}'
     done
     printf "\nRemoving .config/stalonetrayrc\n"
@@ -341,11 +442,15 @@ remove_config_files(){
   if ! [[ -z "$@" ]] ; then
     for i in "$@"
     do
-      printf "\n\nRemoving files in ${i}\n"
+      printf "\n\n(Dry) Removing files in ${i}\n"
       printf ":----------------------------------------------\n"
-      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && exit 1
+      if [[ "$i" == "stalonetray" ]] ; then
+	find .config/stalonetrayrc -delete
+	continue
+      fi
+      ! [[ -d ".config/${i}" ]] && echo "Directory ${i} doesn't exist" && continue
+      find .config/${i} | awk '{print "Removing "$1}'
       find .config/${i} -type l -delete
-      find .config/${i}
       find .config/${i} -delete
     done
     cd "$current_path"
@@ -355,24 +460,145 @@ remove_config_files(){
   exit 1
 }
 
-setup_home_files(){
+remove_local_files(){
   current_path="$PWD"
   cd "/home/${myName}"
-  # Symlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)
-  printf "\nSymlink and setup dotfiles files in $HOME directory like .bashrc,.zshenv, from dotfiles repo ($myDots/HOME)\n"
-  for i in "${homeFiles[@]}"
-  do
-    printf "\n\nLinking ${myDots}/HOME/$i to ~/$i\n"
+  if [[ -z "$1" ]] ; then
+    echo "Needs arguments"
+    echo "Provide dry, link, file or <name of file> as argument"
+    cd "$current_path"
+    exit 1
+  fi
+  if [[ "$@" == "link" ]]
+  then
+    printf "\n\nRemoving broken links in ~/.local/bin folder\n"
     printf ":----------------------------------------------\n"
-    ln -sf "${myDots}/HOME/$i" $i
-  done
-  # ln -sf "${myDots}/HOME/.bashrc" .bashrc
-  # ln -sf "${myDots}/HOME/.zshenv" .zshenv
-  # ln -sf "${myDots}/HOME/.profile" .profile
-  # ln -sf "${myDots}/HOME/.ignore" .ignore
-  # ln -sf "${myDots}/HOME/.tmux.conf" .tmux.conf
-  # ln -sf "${myDots}/HOME/.Xresources" .Xresources
+    ! [[ -d ".local/bin" ]] && echo "Directory ~/.local/bin doesn't exist" && exit 1
+    find .local/bin -type l -delete
+    cd "$current_path"
+    exit 0
+  fi
+  if [[ "$@" == "file" ]]
+  then
+    printf "\n\nRemoving files in ~/.local/bin folder\n"
+    printf ":----------------------------------------------\n"
+    ! [[ -d ".local/bin" ]] && echo "Directory ~/.local/bin doesn't exist" && exit 1
+    find .local/bin -delete
+    cd "$current_path"
+    exit 0
+  fi
+  if [[ "$@" == "dry" ]]
+  then
+    printf "\n\nSimulating removal of files in ~/.local/bin folder\n"
+    printf ":----------------------------------------------\n"
+    ! [[ -d ".local/bin" ]] && echo "Directory ~/.local/bin doesn't exist" && exit 1
+    find .local/bin | awk '{print "Removing "$1}'
+    cd "$current_path"
+    exit 0
+  fi
+  if ! [[ -z "$@" ]] ; then
+    printf "\n\nCustom removal of files in ~/.local/bin folder\n"
+    printf ":----------------------------------------------\n"
+    ! [[ -d ".local/bin" ]] && echo "Directory ~/.local/bin doesn't exist" && exit 1
+    for i in "${@}"
+    do
+      printf "\n\nRemoving file ~/.local/bin/${i}\n"
+      printf ":----------------------------------------------\n"
+      find .local/bin/$i -delete
+    done
+    cd "$current_path"
+    exit 0
+  fi
   cd "$current_path"
+  exit 0
+}
+
+remove_home_files(){
+  current_path="$PWD"
+  cd "/home/${myName}"
+  if [[ -z "$1" ]] ; then
+    echo "Needs arguments"
+    echo "Provide dry, link, file or <name of file> as argument"
+    cd "$current_path"
+    exit 1
+  fi
+  if [[ "$@" == "link" ]]
+  then
+    printf "\n\nRemoving broken links in home folder\n"
+    printf ":----------------------------------------------\n"
+    for i in "${homeFiles[@]}"
+    do
+      printf "\n\nRemoving broken link ~/${i}\n"
+      printf ":----------------------------------------------\n"
+      file "${HOME}/$i" >/dev/null && echo "File ~/$i doesn't exist" && continue
+      file "${HOME}/$i" >/dev/null && find ${i} -xtype l -delete
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  if [[ "$@" == "file" ]]
+  then
+    printf "\n\nRemoving files in home folder\n"
+    printf ":----------------------------------------------\n"
+    for i in "${homeFiles[@]}"
+    do
+      printf "\n\nRemoving file ~/${i}\n"
+      printf ":----------------------------------------------\n"
+      file "${HOME}/$i" >/dev/null && echo "File ~/$i doesn't exist" && continue
+      file "${HOME}/$i" >/dev/null && find ${i} -delete
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  if [[ "$@" == "dry" ]]
+  then
+    printf "\n\nSimulating removal of files in home folder\n"
+    printf ":----------------------------------------------\n"
+    for i in "${homeFiles[@]}"
+    do
+      printf "\n\n(Dry) Removing file ~/${i}\n"
+      printf ":----------------------------------------------\n"
+      file "${HOME}/$i" >/dev/null && echo "File ~/$i doesn't exist" && continue
+      file "${HOME}/$i" >/dev/null && find ${i} | awk '{print "Removing "$1}'
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  if ! [[ -z "$@" ]] ; then
+    printf "\n\nCustom removal of files in home folder\n"
+    printf ":----------------------------------------------\n"
+    for i in "${@}"
+    do
+      printf "\n\n(Dry) Removing file ~/${i}\n"
+      printf ":----------------------------------------------\n"
+      file "${HOME}/$i" >/dev/null && echo "File ~/$i doesn't exist" && continue
+      file "${HOME}/$i" >/dev/null && find ${i} -delete
+    done
+    cd "$current_path"
+    exit 0
+  fi
+  cd "$current_path"
+  exit 0
+}
+
+remove_files() {
+
+  case "$1" in
+    "cfg")
+      remove_config_files "${@: 2}"
+      exit 0 ;;
+    "local")
+      remove_local_files "${@: 2}"
+      exit 0 ;;
+    "home")
+      remove_home_files "${@: 2}"
+      exit 0 ;;
+    *)
+      printf "\nUsage:\n"
+      printf "\nRun 'dotsinit rm [cfg|local|home]' [file|dry|link] to remove|delink|dry files in config|local|home\n"
+      exit 1 ;;
+  esac
+
 }
 
 setup_fonts(){
@@ -394,11 +620,7 @@ fi
 
 case "${1}" in
   "nv")
-    setup_nvim_files
-    exit 0 ;;
-  "bu")
-    backup_config_files
-    backup_local_and_home_files
+    setup_nvim_files "${@: 2}"
     exit 0 ;;
   "dry")
     setup_all_dry
@@ -406,17 +628,20 @@ case "${1}" in
   "all")
     setup_all_files
     exit 0 ;;
-  "home")
-    setup_home_files
-    exit 0 ;;
   "config")
     setup_config_files "${@: 2}"
     exit 0 ;;
-  "rm")
-    remove_config_files "${@: 2}"
-    exit 0 ;;
   "local")
     setup_local_files
+    exit 0 ;;
+  "home")
+    setup_home_files "${@: 2}"
+    exit 0 ;;
+  "bu")
+    backup_files "${@: 2}"
+    exit 0 ;;
+  "rm")
+    remove_files "${@: 2}"
     exit 0 ;;
   "fonts")
     setup_fonts

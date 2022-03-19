@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
-fontsPath="${HOME}/.local/share/fonts"
+# fontDir="${HOME}/tmp/fontscheck"
+fontDir="${HOME}/.local/share/fonts"
 fontsRepo="https://github.com/ryanoasis/nerd-fonts"
 fontsRepoRaw="${fontsRepo}/raw/master/patched-fonts"
 # https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/FiraCode/Regular/complete/Fira%20Code%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
 fontNames=( "JetBrainsMono" "Hack" "FiraCode" "UbuntuMono" "Iosevka" "SourceCodePro" )
 fontTypes=( "Regular" "Bold" "Italic" "BoldItalic" )
-fontDir="${HOME}/.local/share/fonts"
-# fontDir="${HOME}/tmp/fontscheck"
 
 fonts_JetBrainsMono() {
   name1="${1:-JetBrainsMono}"
@@ -294,6 +293,7 @@ fonts_update() {
       printf "\n:----------------------------------------------"
       printf "\n$i font already installed\n"
       printf ":----------------------------------------------\n"
+      continue
     else
       printf "\n:----------------------------------------------"
       printf "\n$i font not installed\n"
@@ -371,6 +371,7 @@ fonts_update_only() {
       printf "\n:----------------------------------------------"
       printf "\n$i font already installed\n"
       printf ":----------------------------------------------\n"
+      continue
     else
       printf "\n:----------------------------------------------"
       printf "\n$i font not installed\n"
@@ -437,4 +438,3 @@ case "${1}" in
     printf "\nRun 'myfonts [ls|get|up|upB|ld]' to [list|download|update already exisiting|update and backup already exisiting|load] nerd fonts from ${fontDir}\n"
     exit 1 ;;
 esac
-

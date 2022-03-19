@@ -402,7 +402,14 @@ case "${1}" in
     myGitCommitPublic "${@: 2}"
     exit 0 ;;
   "commitA")
+    echo "--------------------------------------------------"
+    printf "Commiting in Private Repo\n"
+    echo "--------------------------------------------------"
+    printf "\n"
     myGitCommit "${@: 2}"
+    echo "--------------------------------------------------"
+    printf "Commiting in Public Repo\n"
+    echo "--------------------------------------------------"
     myGitCommitPublic "${@: 2}"
     exit 0 ;;
   "push")
